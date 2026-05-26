@@ -1,32 +1,95 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type FormEvent, type SyntheticEvent } from 'react';
 import { 
-  QrCode, 
   Users, 
   Play, 
   ChevronRight, 
   Coins, 
   Trophy, 
-  User, 
   Check, 
   AlertCircle, 
   RefreshCw, 
   Award,
-  Plus,
   ArrowRight,
   ShieldAlert,
   Settings,
-  HelpCircle,
-  Copy,
-  ExternalLink,
   Radio,
-  Gamepad2,
-  Tv
 } from 'lucide-react';
+
+type Role = 'host' | 'player';
+type SessionState = 'lobby' | 'betting' | 'result' | 'ended';
+
+interface Teacher {
+  id: string;
+  name: string;
+  odds: number;
+}
+
+interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  teachers: Teacher[];
+}
+
+interface TeamBet {
+  teacherId: string;
+  amount: number;
+}
+
+interface Team {
+  id: string;
+  name: string;
+  balance: number;
+  activeBet: TeamBet | null;
+}
+
+interface WinningHistoryEntry {
+  challengeId: string;
+  winningTeacherId: string;
+  winningTeacherName: string;
+}
+
+interface SessionData {
+  id: string;
+  currentSlideIndex: number;
+  state: SessionState;
+  winningHistory: WinningHistoryEntry[];
+  lastWinner: Teacher | null;
+}
+
+interface PresencePayload {
+  id: string;
+  teamName?: string;
+  balance?: number;
+  activeBet?: TeamBet | null;
+}
+
+interface RealtimeChannelLike {
+  on(eventType: 'presence', filter: { event: 'sync' }, callback: () => void): RealtimeChannelLike;
+  on(eventType: 'broadcast', filter: { event: string }, callback: (event: { payload: any }) => void): RealtimeChannelLike;
+  subscribe(callback: (status: string) => void): RealtimeChannelLike;
+  presenceState(): Record<string, PresencePayload[]>;
+  track(payload: PresencePayload): Promise<unknown>;
+  send(payload: { type: 'broadcast'; event: string; payload: unknown }): void;
+  unsubscribe(): void;
+}
+
+interface SupabaseClientLike {
+  channel(name: string, opts?: unknown): RealtimeChannelLike;
+}
+
+declare global {
+  interface Window {
+    supabase?: {
+      createClient: (url: string, key: string) => SupabaseClientLike;
+    };
+  }
+}
 
 // ==========================================
 // KONFIGURERING AV UTMANINGAR & LÄRARE
 // ==========================================
-const CHALLENGES = [
+const CHALLENGES: Challenge[] = [
   {
     id: "ch1",
     title: "Pappersflygplanet",
@@ -77,17 +140,17 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 export default function App() {
-  const [supabase, setSupabase] = useState(null);
+  const [supabase, setSupabase] = useState<SupabaseClientLike | null>(null);
   const [supabaseReady, setSupabaseReady] = useState(false);
 
-  const [role, setRole] = useState(null); // 'host' | 'player'
+  const [role, setRole] = useState<Role | null>(null);
   const [lobbyId, setLobbyId] = useState('');
   const [playerId, setPlayerId] = useState('');
   
   // Realtidstillstånd
-  const [session, setSession] = useState(null);
-  const [teams, setTeams] = useState([]);
-  const [myTeam, setMyTeam] = useState(null);
+  const [session, setSession] = useState<SessionData | null>(null);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [myTeam, setMyTeam] = useState<Team | null>(null);
   
   const [errorMessage, setErrorMessage] = useState('');
   const [newTeamName, setNewTeamName] = useState('');
@@ -99,7 +162,7 @@ export default function App() {
   const [betAmount, setBetAmount] = useState('');
   const [betSuccessMsg, setBetSuccessMsg] = useState('');
 
-  const channelRef = useRef(null);
+  const channelRef = useRef<RealtimeChannelLike | null>(null);
 
   // 1. Dynamisk laddning av Supabase SDK från CDN (Helt utan npm-krockar!)
   useEffect(() => {
@@ -175,7 +238,7 @@ export default function App() {
       // A. Presence - Spåra anslutna lag och deras dynamiska saldon/bets
       .on('presence', { event: 'sync' }, () => {
         const presenceState = channel.presenceState();
-        const activeTeams = [];
+        const activeTeams: Team[] = [];
 
         Object.keys(presenceState).forEach((key) => {
           const userPresences = presenceState[key];
@@ -201,14 +264,16 @@ export default function App() {
       })
       // B. Broadcast - Ta emot slide-byten från spelledaren
       .on('broadcast', { event: 'slide_change' }, ({ payload }) => {
-        setSession(payload.session);
+        const nextSession = payload.session as SessionData;
+        setSession(nextSession);
         // Nollställ gamla inmatningsfält på mobilen inför nya utmaningen
         setSelectedTeacherId('');
         setBetAmount('');
       })
       // C. Broadcast - Ta emot rättningsresultat från spelledaren
       .on('broadcast', { event: 'round_resolved' }, ({ payload }) => {
-        setSession(payload.session);
+        const nextSession = payload.session as SessionData;
+        setSession(nextSession);
       });
 
     // Anslut till kanalen
@@ -277,7 +342,7 @@ export default function App() {
     setLobbyId(generatedId);
     setRole('host');
 
-    const newSession = {
+    const newSession: SessionData = {
       id: generatedId,
       currentSlideIndex: 0, 
       state: 'lobby', 
@@ -291,7 +356,7 @@ export default function App() {
   };
 
   // Anslut till lobby (Player)
-  const joinLobby = (e) => {
+  const joinLobby = (e: FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
     if (!supabase) {
       setErrorMessage("Kopplingen till Supabase är inte aktiv. Kontrollera dina miljövariabler (.env).");
@@ -308,7 +373,7 @@ export default function App() {
   };
 
   // Registrera lagnamn (Player)
-  const registerTeam = async (e) => {
+  const registerTeam = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!newTeamName.trim() || !channelRef.current) return;
 
@@ -338,9 +403,9 @@ export default function App() {
   };
 
   // Placera ett bet (Player)
-  const placeBet = async (e) => {
+  const placeBet = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedTeacherId || !betAmount || !channelRef.current) return;
+    if (!selectedTeacherId || !betAmount || !channelRef.current || !myTeam) return;
     const amount = parseInt(betAmount);
 
     if (isNaN(amount) || amount <= 0) {
@@ -360,11 +425,11 @@ export default function App() {
 
     const newBalance = myTeam.balance - amount;
 
-    setMyTeam(prev => ({
-      ...prev,
+    setMyTeam({
+      ...myTeam,
       balance: newBalance,
       activeBet: updatedBet
-    }));
+    });
 
     // Uppdatera mitt saldo och aktiva bet i Supabase Presence
     await channelRef.current.track({
@@ -385,11 +450,11 @@ export default function App() {
     const refundAmount = myTeam.activeBet.amount;
     const newBalance = myTeam.balance + refundAmount;
 
-    setMyTeam(prev => ({
-      ...prev,
+    setMyTeam({
+      ...myTeam,
       balance: newBalance,
       activeBet: null
-    }));
+    });
 
     await channelRef.current.track({
       id: playerId,
@@ -405,7 +470,7 @@ export default function App() {
     const nextIndex = session.currentSlideIndex + 1;
     const isEnd = nextIndex > CHALLENGES.length;
 
-    const updatedSession = {
+    const updatedSession: SessionData = {
       ...session,
       currentSlideIndex: nextIndex,
       state: isEnd ? 'ended' : 'betting',
@@ -423,10 +488,12 @@ export default function App() {
   };
 
   // Kora vinnare och dela ut poäng (Host)
-  const resolveChallenge = async (winningTeacherId) => {
+  const resolveChallenge = async (winningTeacherId: string) => {
     if (!session || !channelRef.current) return;
     const currentChallenge = CHALLENGES[session.currentSlideIndex - 1];
+    if (!currentChallenge) return;
     const winningTeacher = currentChallenge.teachers.find(t => t.id === winningTeacherId);
+    if (!winningTeacher) return;
 
     const updatedHistory = [...(session.winningHistory || []), {
       challengeId: currentChallenge.id,
@@ -434,7 +501,7 @@ export default function App() {
       winningTeacherName: winningTeacher.name
     }];
 
-    const updatedSession = {
+    const updatedSession: SessionData = {
       ...session,
       state: 'result',
       winningHistory: updatedHistory,
@@ -462,29 +529,26 @@ export default function App() {
         // VINST: Utbetalning (insats * odds)
         const winnings = Math.round(myTeam.activeBet.amount * session.lastWinner.odds);
         const newBalance = myTeam.balance + winnings;
+        const updatedTeam: Team = { ...myTeam, balance: newBalance, activeBet: null };
+        setMyTeam(updatedTeam);
         
-        setMyTeam(prev => {
-          const updated = { ...prev, balance: newBalance, activeBet: null };
-          // Rapportera nytt saldo till presentationstavlan
-          channelRef.current.track({
-            id: playerId,
-            teamName: myTeam.name,
-            balance: newBalance,
-            activeBet: null
-          });
-          return updated;
+        // Rapportera nytt saldo till presentationstavlan
+        channelRef.current.track({
+          id: playerId,
+          teamName: updatedTeam.name,
+          balance: updatedTeam.balance,
+          activeBet: null
         });
       } else {
+        const updatedTeam: Team = { ...myTeam, activeBet: null };
+        setMyTeam(updatedTeam);
+
         // FÖRLUST: Nollställ bara aktivt bet (pengarna drogs redan när bettet låstes)
-        setMyTeam(prev => {
-          const updated = { ...prev, activeBet: null };
-          channelRef.current.track({
-            id: playerId,
-            teamName: myTeam.name,
-            balance: myTeam.balance,
-            activeBet: null
-          });
-          return updated;
+        channelRef.current.track({
+          id: playerId,
+          teamName: updatedTeam.name,
+          balance: updatedTeam.balance,
+          activeBet: null
         });
       }
     }
@@ -494,7 +558,7 @@ export default function App() {
   const resetEntireGame = () => {
     if (!session || !channelRef.current) return;
 
-    const resetSession = {
+    const resetSession: SessionData = {
       ...session,
       currentSlideIndex: 0,
       state: 'lobby',
@@ -515,7 +579,7 @@ export default function App() {
   // Hämta mest framgångsrika läraren
   const getTopTeacher = () => {
     if (!session || !session.winningHistory || session.winningHistory.length === 0) return "Ingen";
-    const counts = {};
+    const counts: Record<string, number> = {};
     session.winningHistory.forEach(h => {
       counts[h.winningTeacherName] = (counts[h.winningTeacherName] || 0) + 1;
     });
@@ -601,6 +665,12 @@ export default function App() {
               <span className="font-bold block mb-1">Ett fel uppstod</span>
               <p className="text-xs text-red-300 leading-relaxed">{errorMessage}</p>
             </div>
+          </div>
+        )}
+
+        {betSuccessMsg && (
+          <div className="mb-6 w-full max-w-xl bg-emerald-950/80 border border-emerald-800 text-emerald-200 px-4 py-3 rounded-xl text-sm shadow-lg">
+            {betSuccessMsg}
           </div>
         )}
 
@@ -747,7 +817,7 @@ export default function App() {
                     src={qrCodeUrl} 
                     alt="QR Kod för anslutning" 
                     className="w-full aspect-square max-h-[300px]"
-                    onError={(e) => { e.target.style.display = 'none'; }}
+                    onError={(e: SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = 'none'; }}
                   />
                   <div className="mt-4 text-center">
                     <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Skanna för att spela!</p>
@@ -834,6 +904,7 @@ export default function App() {
                       <div className="space-y-2.5 max-h-[250px] overflow-y-auto pr-2">
                         {teams.map((t) => {
                           const hasBet = !!t.activeBet;
+                          const activeBet = t.activeBet;
                           return (
                             <div key={t.id} className="flex justify-between items-center text-sm p-2 bg-slate-900/40 rounded-lg border border-slate-800/60">
                               <span className="font-medium truncate text-slate-200">{t.name}</span>
@@ -841,7 +912,7 @@ export default function App() {
                                 {hasBet ? (
                                   session.state === 'result' ? (
                                     <span className="text-slate-400 text-xs font-mono">
-                                      {t.activeBet.amount}p på {CHALLENGES[session.currentSlideIndex - 1].teachers.find(teacher => teacher.id === t.activeBet.teacherId)?.name.split(' ')[0]}
+                                      {activeBet?.amount ?? 0}p på {CHALLENGES[session.currentSlideIndex - 1].teachers.find(teacher => teacher.id === activeBet?.teacherId)?.name.split(' ')[0]}
                                     </span>
                                   ) : (
                                     <span className="bg-emerald-950/50 text-emerald-400 px-2 py-0.5 rounded text-xs border border-emerald-900/50 font-semibold flex items-center gap-1">
@@ -1050,7 +1121,7 @@ export default function App() {
                       <p className="text-slate-400 text-sm mt-1">
                         Du har bettat <strong className="text-indigo-300">{myTeam.activeBet.amount} poäng</strong> på{' '}
                         <strong className="text-indigo-300">
-                          {CHALLENGES[session.currentSlideIndex - 1].teachers.find(t => t.id === myTeam.activeBet.teacherId)?.name}
+                          {CHALLENGES[session.currentSlideIndex - 1].teachers.find(t => t.id === (myTeam.activeBet?.teacherId ?? ''))?.name}
                         </strong>
                       </p>
                     </div>

@@ -62,6 +62,7 @@ interface PresencePayload {
   teamName?: string;
   balance?: number;
   activeBet?: TeamBet | null;
+  updatedAt?: number;
 }
 
 interface RealtimeChannelLike {
@@ -238,21 +239,29 @@ export default function App() {
       // A. Presence - Spåra anslutna lag och deras dynamiska saldon/bets
       .on('presence', { event: 'sync' }, () => {
         const presenceState = channel.presenceState();
-        const activeTeams: Team[] = [];
+        const teamMap = new Map<string, Team & { updatedAt: number }>();
 
         Object.keys(presenceState).forEach((key) => {
           const userPresences = presenceState[key];
           userPresences.forEach((p) => {
             if (p.teamName) {
-              activeTeams.push({
+              const incomingUpdatedAt = p.updatedAt ?? 0;
+              const existing = teamMap.get(p.id);
+
+              if (!existing || incomingUpdatedAt >= existing.updatedAt) {
+                teamMap.set(p.id, {
                 id: p.id,
                 name: p.teamName,
                 balance: p.balance ?? 100,
-                activeBet: p.activeBet ?? null
-              });
+                  activeBet: p.activeBet ?? null,
+                  updatedAt: incomingUpdatedAt
+                });
+              }
             }
           });
         });
+
+        const activeTeams: Team[] = Array.from(teamMap.values()).map(({ updatedAt: _updatedAt, ...team }) => team);
 
         // Sortera poängtavlan (mest poäng överst)
         activeTeams.sort((a, b) => b.balance - a.balance);
@@ -285,7 +294,8 @@ export default function App() {
             id: playerId,
             teamName: myTeam.name,
             balance: myTeam.balance,
-            activeBet: myTeam.activeBet
+            activeBet: myTeam.activeBet,
+            updatedAt: Date.now()
           });
         }
         
@@ -398,7 +408,8 @@ export default function App() {
       id: playerId,
       teamName: newTeam.name,
       balance: 100,
-      activeBet: null
+      activeBet: null,
+      updatedAt: Date.now()
     });
   };
 
@@ -406,7 +417,12 @@ export default function App() {
   const placeBet = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedTeacherId || !betAmount || !channelRef.current || !myTeam) return;
-    const amount = parseInt(betAmount);
+    const amount = parseInt(betAmount, 10);
+
+    if (myTeam.activeBet) {
+      setErrorMessage("Du har redan låst ett bet för denna runda.");
+      return;
+    }
 
     if (isNaN(amount) || amount <= 0) {
       setErrorMessage("Ange ett giltigt belopp att betta.");
@@ -436,7 +452,8 @@ export default function App() {
       id: playerId,
       teamName: myTeam.name,
       balance: newBalance,
-      activeBet: updatedBet
+      activeBet: updatedBet,
+      updatedAt: Date.now()
     });
 
     setErrorMessage('');
@@ -460,7 +477,8 @@ export default function App() {
       id: playerId,
       teamName: myTeam.name,
       balance: newBalance,
-      activeBet: null
+      activeBet: null,
+      updatedAt: Date.now()
     });
   };
 
@@ -537,7 +555,8 @@ export default function App() {
           id: playerId,
           teamName: updatedTeam.name,
           balance: updatedTeam.balance,
-          activeBet: null
+          activeBet: null,
+          updatedAt: Date.now()
         });
       } else {
         const updatedTeam: Team = { ...myTeam, activeBet: null };
@@ -548,7 +567,8 @@ export default function App() {
           id: playerId,
           teamName: updatedTeam.name,
           balance: updatedTeam.balance,
-          activeBet: null
+          activeBet: null,
+          updatedAt: Date.now()
         });
       }
     }

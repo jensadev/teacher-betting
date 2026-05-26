@@ -94,7 +94,7 @@ const CHALLENGES: Challenge[] = [
   {
     id: "ch1",
     title: "Pappersflygplanet",
-    description: "Vem kan vika och kasta ett pappersflygplan längst i korridoren?",
+    description: "Någralärare med förkärlek för papercuts ska vika och sedan kasta ett pappersflygplan så långt som möjligt.",
     teachers: [
       { id: "t1", name: "Kalle (Matte)", odds: 1.8 },
       { id: "t2", name: "Anna (Svenska)", odds: 2.5 },
@@ -104,8 +104,8 @@ const CHALLENGES: Challenge[] = [
   },
   {
     id: "ch2",
-    title: "Kaffehävningen",
-    description: "Vem dricker upp en kopp ljummet kaffe snabbast utan att spilla?",
+    title: "Kortslutningen",
+    description: "De stackars lärarna som valts för detta ska recitera så många ord som möjligt på en viss bokstav under 30 sekunder.",
     teachers: [
       { id: "t1", name: "Kalle (Matte)", odds: 3.0 },
       { id: "t2", name: "Anna (Svenska)", odds: 2.1 },
@@ -116,18 +116,62 @@ const CHALLENGES: Challenge[] = [
   {
     id: "ch3",
     title: "Sifferminnet",
-    description: "Vem kan memorera flest decimaler av Pi på 60 sekunder?",
+    description: "Några oändligt olyckliga lärare ska nu memorera flest decimaler av Pi på 30 sekunder.",
     teachers: [
-      { id: "t1", name: "Kalle (Matte)", odds: 1.4 },
-      { id: "t2", name: "Anna (Svenska)", odds: 3.2 },
-      { id: "t3", name: "Sven (Idrott)", odds: 6.0 },
-      { id: "t4", name: "Elsa (Engelska)", odds: 2.8 }
+      { id: "t1", name: "Per (Matte)", odds: 0.4 },
+      { id: "t2", name: "Robert (Matte)", odds: 0.6 },
+      { id: "t3", name: "Frej (Central)", odds: 6.0 },
+      { id: "t4", name: "Henrik (Vilde)", odds: 2.8 }
     ]
   },
   {
     id: "ch4",
-    title: "Penn-tornet",
-    description: "Vem kan stapla flest färgpennor på höjden under tidspress?",
+    title: "Kex-ansiktet",
+    description: "Några få förtappade stackars lärare ska placera ett Mariekex på pannan. Lärarna ska flytta kexet till munnen utan att använda händerna.",
+    teachers: [
+      { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
+      { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
+      { id: "t3", name: "Sven (Idrott)", odds: 2.8 },
+      { id: "t4", name: "Elsa (Engelska)", odds: 2.5 }
+    ]
+  },
+    {
+    id: "ch5",
+    title: "Ballong pumpning",
+    description: "De olyckligt utvalda lärarna ska blåsa upp en ballong på tid så att den spricker enbart med hjälp av en handpump.",
+    teachers: [
+      { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
+      { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
+      { id: "t3", name: "Sven (Idrott)", odds: 2.8 },
+      { id: "t4", name: "Elsa (Engelska)", odds: 2.5 }
+    ]
+  }, 
+    {
+    id: "ch6",
+    title: "Pennan i flaskan",
+    description: "Med en penna hängande från ett snöre runt midjan ska den stackars läraren försöka få ner pennan i en flaska på marken utan att använda händerna.",
+    teachers: [
+      { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
+      { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
+      { id: "t3", name: "Sven (Idrott)", odds: 2.8 },
+      { id: "t4", name: "Elsa (Engelska)", odds: 2.5 }
+    ]
+  },
+    {
+    id: "ch7",
+    title: "Emoji rebus",
+    description: "De förtappade få kommer att få se 5 stycken rebusar med emojis, utifrån dessa ska de gissa filmen eller musiken som rebusen representerar.",
+    teachers: [
+      { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
+      { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
+      { id: "t3", name: "Sven (Idrott)", odds: 2.8 },
+      { id: "t4", name: "Elsa (Engelska)", odds: 2.5 }
+    ]
+  },
+    {
+    id: "ch8",
+    title: "Sockerbitstornet",
+    description: "Ack och ve, de utvalda ska placera sockerbitar på varandra och bygga det högsta tornet på 60 sekunder. Tornet måste stå i minst 3 sekunder för att räknas.",
     teachers: [
       { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
       { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
@@ -1263,7 +1307,6 @@ export default function App() {
                 </div>
               </div>
             )}
-
           </div>
         )}
 
@@ -1271,7 +1314,7 @@ export default function App() {
 
       {/* FOOTER */}
       <footer className="p-4 border-t border-slate-800 text-center text-xs text-slate-500">
-        <p>Byggd i React med Supabase Realtime (Broadcast & Presence)</p>
+        <p>Byggd av team episk gnu</p>
       </footer>
 
     </div>

@@ -1310,7 +1310,7 @@ export default function App() {
 
             {/* FOOTER */}
             <footer className="p-4 border-t border-slate-800 text-center text-xs text-slate-500">
-                <p>Byggd av team episk gnu.</p>
+                <p>Byggd av team episk gnu. Sidan använder kakor, du gillar det.</p>
             </footer>
 
         </div>

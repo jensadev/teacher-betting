@@ -12,7 +12,6 @@ import {
     ArrowRight,
     ShieldAlert,
     Settings,
-    Radio,
 } from 'lucide-react';
 
 type Role = 'host' | 'player';
@@ -39,6 +38,13 @@ interface TeamBet {
 interface Team {
     id: string;
     name: string;
+    balance: number;
+    activeBet: TeamBet | null;
+}
+
+interface StoredTeamIdentity {
+    lobbyId: string;
+    teamName: string;
     balance: number;
     activeBet: TeamBet | null;
 }
@@ -183,6 +189,7 @@ const CHALLENGES: Challenge[] = [
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const TEAM_IDENTITY_STORAGE_KEY = 'betit_team_identity';
 
 export default function App() {
     const [supabase, setSupabase] = useState<SupabaseClientLike | null>(null);
@@ -208,6 +215,48 @@ export default function App() {
     const [betSuccessMsg, setBetSuccessMsg] = useState('');
 
     const channelRef = useRef<RealtimeChannelLike | null>(null);
+
+    const normalizeTeamName = (name: string) => name.trim().toLowerCase();
+
+    const loadStoredTeamIdentity = (currentLobbyId: string): StoredTeamIdentity | null => {
+        if (!currentLobbyId) return null;
+
+        try {
+            const raw = localStorage.getItem(TEAM_IDENTITY_STORAGE_KEY);
+            if (!raw) return null;
+
+            const parsed = JSON.parse(raw) as Partial<StoredTeamIdentity>;
+            if (
+                parsed.lobbyId !== currentLobbyId ||
+                typeof parsed.teamName !== 'string' ||
+                !parsed.teamName.trim()
+            ) {
+                return null;
+            }
+
+            return {
+                lobbyId: parsed.lobbyId,
+                teamName: parsed.teamName.trim(),
+                balance: typeof parsed.balance === 'number' ? parsed.balance : 100,
+                activeBet: parsed.activeBet ?? null,
+            };
+        } catch {
+            return null;
+        }
+    };
+
+    const persistTeamIdentity = (team: Team, currentLobbyId: string) => {
+        if (!currentLobbyId || !team.name.trim()) return;
+
+        const identity: StoredTeamIdentity = {
+            lobbyId: currentLobbyId,
+            teamName: team.name,
+            balance: team.balance,
+            activeBet: team.activeBet,
+        };
+
+        localStorage.setItem(TEAM_IDENTITY_STORAGE_KEY, JSON.stringify(identity));
+    };
 
     // 1. Dynamisk laddning av Supabase SDK från CDN (Helt utan npm-krockar!)
     useEffect(() => {
@@ -382,6 +431,34 @@ export default function App() {
         }
     }, []);
 
+    // Förifyll lag vid återanslutning om vi har sparad team-identitet för samma lobby
+    useEffect(() => {
+        if (role !== 'player' || !lobbyId || !playerId || myTeam) return;
+
+        const storedTeam = loadStoredTeamIdentity(lobbyId);
+        if (!storedTeam) return;
+
+        const restoredTeam: Team = {
+            id: playerId,
+            name: storedTeam.teamName,
+            balance: storedTeam.balance,
+            activeBet: storedTeam.activeBet,
+        };
+
+        setMyTeam(restoredTeam);
+        setNewTeamName(storedTeam.teamName);
+
+        if (channelRef.current) {
+            void channelRef.current.track({
+                id: playerId,
+                teamName: restoredTeam.name,
+                balance: restoredTeam.balance,
+                activeBet: restoredTeam.activeBet,
+                updatedAt: Date.now()
+            });
+        }
+    }, [role, lobbyId, playerId, myTeam]);
+
     // ==========================================
     // SPELREGLER & LOGIK
     // ==========================================
@@ -431,28 +508,45 @@ export default function App() {
         e.preventDefault();
         if (!newTeamName.trim() || !channelRef.current) return;
 
-        if (teams.some(t => t.name.toLowerCase() === newTeamName.trim().toLowerCase())) {
+        if (!session) {
+            setErrorMessage("Väntar på sessionstatus från spelledaren. Försök igen om en sekund.");
+            return;
+        }
+
+        const desiredName = newTeamName.trim();
+        const existingTeam = teams.find((t) => normalizeTeamName(t.name) === normalizeTeamName(desiredName));
+        const hasGameStarted = session.state !== 'lobby';
+        const storedTeam = loadStoredTeamIdentity(lobbyId);
+        const canRejoinFromStorage = !!storedTeam && normalizeTeamName(storedTeam.teamName) === normalizeTeamName(desiredName);
+
+        if (!hasGameStarted && existingTeam) {
             setErrorMessage("Lagnamnet är upptaget! Välj ett annat.");
             return;
         }
 
-        const newTeam = {
+        if (hasGameStarted && !existingTeam && !canRejoinFromStorage) {
+            setErrorMessage("Spelet har startat. Endast befintliga lag kan återansluta med sitt lagnamn.");
+            return;
+        }
+
+        const newTeam: Team = {
             id: playerId,
-            name: newTeamName.trim(),
-            balance: 100,
-            activeBet: null
+            name: existingTeam?.name ?? desiredName,
+            balance: existingTeam?.balance ?? storedTeam?.balance ?? 100,
+            activeBet: existingTeam?.activeBet ?? storedTeam?.activeBet ?? null
         };
 
         setMyTeam(newTeam);
         setNewTeamName('');
         setErrorMessage('');
+        persistTeamIdentity(newTeam, lobbyId);
 
         // Rapportera laganslutning till Supabase Presence
         await channelRef.current.track({
             id: playerId,
             teamName: newTeam.name,
-            balance: 100,
-            activeBet: null,
+            balance: newTeam.balance,
+            activeBet: newTeam.activeBet,
             updatedAt: Date.now()
         });
     };
@@ -491,6 +585,12 @@ export default function App() {
             activeBet: updatedBet
         });
 
+        persistTeamIdentity({
+            ...myTeam,
+            balance: newBalance,
+            activeBet: updatedBet
+        }, lobbyId);
+
         // Uppdatera mitt saldo och aktiva bet i Supabase Presence
         await channelRef.current.track({
             id: playerId,
@@ -516,6 +616,12 @@ export default function App() {
             balance: newBalance,
             activeBet: null
         });
+
+        persistTeamIdentity({
+            ...myTeam,
+            balance: newBalance,
+            activeBet: null
+        }, lobbyId);
 
         await channelRef.current.track({
             id: playerId,
@@ -593,6 +699,7 @@ export default function App() {
                 const newBalance = myTeam.balance + winnings;
                 const updatedTeam: Team = { ...myTeam, balance: newBalance, activeBet: null };
                 setMyTeam(updatedTeam);
+                persistTeamIdentity(updatedTeam, lobbyId);
 
                 // Rapportera nytt saldo till presentationstavlan
                 channelRef.current.track({
@@ -605,6 +712,7 @@ export default function App() {
             } else {
                 const updatedTeam: Team = { ...myTeam, activeBet: null };
                 setMyTeam(updatedTeam);
+                persistTeamIdentity(updatedTeam, lobbyId);
 
                 // FÖRLUST: Nollställ bara aktivt bet (pengarna drogs redan när bettet låstes)
                 channelRef.current.track({
@@ -691,14 +799,6 @@ export default function App() {
                     )}
 
                     <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1.5 text-xs font-bold rounded-xl border flex items-center gap-1.5 ${supabase
-                                ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/60'
-                                : 'bg-red-950/40 text-red-400 border-red-900/60'
-                            }`}>
-                            <Radio size={14} className={supabase ? "text-emerald-400 animate-pulse" : "text-red-400"} />
-                            {supabase ? 'Supabase Ansluten ✅' : 'Supabase Saknas ⚠️'}
-                        </span>
-
                         {role === 'host' && (
                             <button
                                 onClick={() => setShowUrlSettings(!showUrlSettings)}
@@ -847,6 +947,9 @@ export default function App() {
                                     <p className="text-slate-400 text-base leading-relaxed">
                                         Varje lag börjar med <strong className="text-emerald-400">100 {CURRENCY}</strong> att betta för.
                                         Skanna QR-koden eller skriv in koden manuellt.
+                                    </p>
+                                    <p className="text-xs text-amber-300/90">
+                                        Efter att första utmaningen startat låses nya lagnamn. Befintliga lag kan dock återansluta med samma namn.
                                     </p>
 
                                     <div className="p-4 bg-slate-900/80 rounded-2xl border border-slate-800 space-y-2">
@@ -1117,7 +1220,7 @@ export default function App() {
                             <div className="bg-slate-950/40 p-8 rounded-3xl border border-slate-800 space-y-6">
                                 <div className="text-center space-y-2">
                                     <h2 className="text-2xl font-black text-white">Anslut ditt lag!</h2>
-                                    <p className="text-slate-400 text-sm">Välj ett lagnamn som syns på storskärmen. Ni får 100 {CURRENCY} i startkapital.</p>
+                                    <p className="text-slate-400 text-sm">Välj ett lagnamn som syns på storskärmen. Ni får 100 {CURRENCY} i startkapital. När spelet startat kan endast befintliga lagnamn återansluta.</p>
                                 </div>
 
                                 <form onSubmit={registerTeam} className="space-y-4">

@@ -2,6 +2,13 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Teacher Betting Event Rules
+
+- New team registration is open only while the game is in lobby state.
+- After the host starts the game, only existing team names can rejoin.
+- Players can refresh and rejoin more easily because the latest team identity is stored in browser localStorage.
+- This setup is intentionally lightweight and does not include anti-impersonation protections.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)

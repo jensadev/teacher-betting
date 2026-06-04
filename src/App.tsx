@@ -108,19 +108,9 @@ const CHALLENGES: Challenge[] = [
             { id: "t4", name: "Sara (DNF)", odds: 4.33 }
         ]
     },
+
     {
         id: "ch2",
-        title: "Kex-ansiktet",
-        description: "Några få förtappade stackars lärare ska placera ett Mariekex på pannan. Lärarna ska flytta kexet till munnen utan att använda händerna.",
-        teachers: [
-            { id: "t1", name: "Frej (Artsyfartsy)", odds: 6 },
-            { id: "t2", name: "Mattias (Nätverk)", odds: 6 },
-            { id: "t3", name: "Jack (Matte)", odds: 6 },
-            { id: "t4", name: "Lena (Kurator)", odds: 2 }
-        ]
-    },
-    {
-        id: "c3",
         title: "Kortslutningen",
         description: "De stackars lärarna som valts för detta ska recitera så många ord som möjligt på en viss bokstav under 30 sekunder.",
         teachers: [
@@ -128,6 +118,17 @@ const CHALLENGES: Challenge[] = [
             { id: "t2", name: "Robert (Matte)", odds: 3.75 },
             { id: "t3", name: "Eszter (Litteratur)", odds: 3 },
             { id: "t4", name: "Jimmy (Psykologi)", odds: 15 }
+        ]
+    },
+        {
+        id: "ch3",
+        title: "Kex-ansiktet",
+        description: "Några få förtappade stackars lärare ska placera ett Mariekex på pannan. Lärarna ska flytta kexet till munnen utan att använda händerna.",
+        teachers: [
+            { id: "t1", name: "Frej (Artsyfartsy)", odds: 8 },
+            { id: "t2", name: "Mattias (Nätverk)", odds: 8 },
+            { id: "t3", name: "Fredrik (Religion)", odds: 2.67 },
+            { id: "t4", name: "Lena (Kurator)", odds: 2.67 }
         ]
     },
     {
@@ -147,7 +148,7 @@ const CHALLENGES: Challenge[] = [
         description: "Med en penna hängande från ett snöre runt midjan ska den stackars läraren försöka få ner pennan i en flaska på marken utan att använda händerna.",
         teachers: [
             { id: "t1", name: "Fredrik (Religion)", odds: 3.75 },
-            { id: "t2", name: "Jack (Matte)", odds: 7.5 },
+            { id: "t2", name: "Eszter (Litteratur)", odds: 7.5 },
             { id: "t3", name: "Jimmy (Psykologi)", odds: 3 },
             { id: "t4", name: "Daniel (Engelska)", odds: 3.75 }
         ]
@@ -168,10 +169,10 @@ const CHALLENGES: Challenge[] = [
         title: "Engelska ord",
         description: "De olyckligt utvalda ska stava engelska ord.",
         teachers: [
-            { id: "t1", name: "Daniel (Engelska)", odds: 3.8 },
-            { id: "t2", name: "Sara (DNF)", odds: 3.8 },
-            { id: "t3", name: "Henrik (Goblin)", odds: 3.8 },
-            { id: "t4", name: "Robert (Matte)", odds: 4.75 }
+            { id: "t1", name: "Daniel (Engelska)", odds: 3 },
+            { id: "t2", name: "Sara (DNF)", odds: 3 },
+            { id: "t3", name: "Jimmy (Psykologi)", odds: 15 },
+            { id: "t4", name: "Robert (Matte)", odds: 3.75 }
         ]
     },
     {

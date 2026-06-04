@@ -102,76 +102,76 @@ const CHALLENGES: Challenge[] = [
         title: "Pappersflygplanet",
         description: "Någralärare med förkärlek för papercuts ska vika och sedan kasta ett pappersflygplan så långt som möjligt.",
         teachers: [
-            { id: "t1", name: "Kalle (Matte)", odds: 1.8 },
-            { id: "t2", name: "Anna (Svenska)", odds: 2.5 },
-            { id: "t3", name: "Sven (Idrott)", odds: 3.5 },
-            { id: "t4", name: "Elsa (Engelska)", odds: 4.2 }
+            { id: "t1", name: "Per (Matte)", odds: 2.6 },
+            { id: "t2", name: "Fredrik (Religion)", odds: 6.5 },
+            { id: "t3", name: "Henrik (Goblin)", odds: 4.33 },
+            { id: "t4", name: "Sara (DNF)", odds: 4.33 }
         ]
     },
     {
         id: "ch2",
-        title: "Kortslutningen",
-        description: "De stackars lärarna som valts för detta ska recitera så många ord som möjligt på en viss bokstav under 30 sekunder.",
+        title: "Kex-ansiktet",
+        description: "Några få förtappade stackars lärare ska placera ett Mariekex på pannan. Lärarna ska flytta kexet till munnen utan att använda händerna.",
         teachers: [
-            { id: "t1", name: "Kalle (Matte)", odds: 3.0 },
-            { id: "t2", name: "Anna (Svenska)", odds: 2.1 },
-            { id: "t3", name: "Sven (Idrott)", odds: 1.6 },
-            { id: "t4", name: "Elsa (Engelska)", odds: 5.0 }
+            { id: "t1", name: "Frej (Artsyfartsy)", odds: 6 },
+            { id: "t2", name: "Mattias (Nätverk)", odds: 6 },
+            { id: "t3", name: "Jack (Matte)", odds: 6 },
+            { id: "t4", name: "Lena (Kurator)", odds: 2 }
         ]
     },
     {
-        id: "ch3",
-        title: "Sifferminnet",
-        description: "Några oändligt olyckliga lärare ska nu memorera flest decimaler av Pi på 30 sekunder.",
+        id: "c3",
+        title: "Kortslutningen",
+        description: "De stackars lärarna som valts för detta ska recitera så många ord som möjligt på en viss bokstav under 30 sekunder.",
         teachers: [
-            { id: "t1", name: "Per (Matte)", odds: 0.4 },
-            { id: "t2", name: "Robert (Matte)", odds: 0.6 },
-            { id: "t3", name: "Frej (Central)", odds: 6.0 },
-            { id: "t4", name: "Henrik (Vilde)", odds: 2.8 }
+            { id: "t1", name: "Sara (Rektor)", odds: 3.0 },
+            { id: "t2", name: "Robert (Matte)", odds: 3.75 },
+            { id: "t3", name: "Eszter (Litteratur)", odds: 3 },
+            { id: "t4", name: "Jimmy (Psykologi)", odds: 15 }
         ]
     },
     {
         id: "ch4",
-        title: "Emoji rebus",
-        description: "De förtappade få kommer att få se 5 stycken rebusar med emojis, utifrån dessa ska de gissa filmen eller musiken som rebusen representerar.",
+        title: "Sifferminnet",
+        description: "Några oändligt olyckliga lärare ska nu memorera flest decimaler av Pi på 30 sekunder.",
         teachers: [
-            { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
-            { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
-            { id: "t3", name: "Sven (Idrott)", odds: 2.8 },
-            { id: "t4", name: "Elsa (Engelska)", odds: 2.5 }
+            { id: "t1", name: "Norman (Kemi)", odds: 3.25 },
+            { id: "t2", name: "Jens (Programmering)", odds: 4.33 },
+            { id: "t3", name: "Rafael (Matematik)", odds: 3.25 },
+            { id: "t4", name: "Henrik (Goblin)", odds: 6.5 }
         ]
     },
     {
         id: "ch5",
-        title: "Engelska ord",
-        description: "De olyckligt utvalda ska stava engelska ord.",
+        title: "Pennan i flaskan",
+        description: "Med en penna hängande från ett snöre runt midjan ska den stackars läraren försöka få ner pennan i en flaska på marken utan att använda händerna.",
         teachers: [
-            { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
-            { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
-            { id: "t3", name: "Sven (Idrott)", odds: 2.8 },
-            { id: "t4", name: "Elsa (Engelska)", odds: 2.5 }
+            { id: "t1", name: "Fredrik (Religion)", odds: 3.75 },
+            { id: "t2", name: "Jack (Matte)", odds: 7.5 },
+            { id: "t3", name: "Jimmy (Psykologi)", odds: 3 },
+            { id: "t4", name: "Daniel (Engelska)", odds: 3.75 }
         ]
     },
     {
         id: "ch6",
-        title: "Pennan i flaskan",
-        description: "Med en penna hängande från ett snöre runt midjan ska den stackars läraren försöka få ner pennan i en flaska på marken utan att använda händerna.",
+        title: "Emoji rebus",
+        description: "De förtappade få kommer att få se 5 stycken rebusar med emojis, utifrån dessa ska de gissa filmen eller musiken som rebusen representerar.",
         teachers: [
-            { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
-            { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
-            { id: "t3", name: "Sven (Idrott)", odds: 2.8 },
-            { id: "t4", name: "Elsa (Engelska)", odds: 2.5 }
+            { id: "t1", name: "Lena (Kurator)", odds: 4.33 },
+            { id: "t2", name: "Mattias (Nätverk)", odds: 3.25 },
+            { id: "t3", name: "Rafael (Matematik)", odds: 4.33 },
+            { id: "t4", name: "Frej (Artsyfartsy)", odds: 4.33 }
         ]
     },
     {
         id: "ch7",
-        title: "Kex-ansiktet",
-        description: "Några få förtappade stackars lärare ska placera ett Mariekex på pannan. Lärarna ska flytta kexet till munnen utan att använda händerna.",
+        title: "Engelska ord",
+        description: "De olyckligt utvalda ska stava engelska ord.",
         teachers: [
-            { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
-            { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
-            { id: "t3", name: "Sven (Idrott)", odds: 2.8 },
-            { id: "t4", name: "Elsa (Engelska)", odds: 2.5 }
+            { id: "t1", name: "Daniel (Engelska)", odds: 3.8 },
+            { id: "t2", name: "Sara (DNF)", odds: 3.8 },
+            { id: "t3", name: "Henrik (Goblin)", odds: 3.8 },
+            { id: "t4", name: "Robert (Matte)", odds: 4.75 }
         ]
     },
     {
@@ -179,12 +179,12 @@ const CHALLENGES: Challenge[] = [
         title: "Sockerbitstornet",
         description: "Ack och ve, de utvalda ska placera sockerbitar på varandra och bygga det högsta tornet på 60 sekunder. Tornet byggs på en pinne!",
         teachers: [
-            { id: "t1", name: "Kalle (Matte)", odds: 2.5 },
-            { id: "t2", name: "Anna (Svenska)", odds: 2.2 },
-            { id: "t3", name: "Sven (Idrott)", odds: 2.8 },
-            { id: "t4", name: "Elsa (Engelska)", odds: 2.5 }
+            { id: "t1", name: "Per (Matte)", odds: 4 },
+            { id: "t2", name: "Eszter (Litteratur)", odds: 12 },
+            { id: "t3", name: "Norman (Kemi)", odds: 2.4 },
+            { id: "t4", name: "Jens (Programmering)", odds: 4 }
         ]
-    }
+    },
 ];
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -1026,8 +1026,8 @@ export default function App() {
                                                     <div
                                                         key={t.id}
                                                         className={`p-5 rounded-2xl border transition ${session.state === 'result' && isLastWinner
-                                                                ? 'bg-emerald-950/40 border-emerald-500'
-                                                                : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                                                            ? 'bg-emerald-950/40 border-emerald-500'
+                                                            : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
                                                             }`}
                                                     >
                                                         <div className="flex justify-between items-start">
@@ -1329,8 +1329,8 @@ export default function App() {
                                                             type="button"
                                                             onClick={() => setSelectedTeacherId(t.id)}
                                                             className={`w-full p-3 rounded-xl text-left border flex justify-between items-center transition ${selectedTeacherId === t.id
-                                                                    ? 'bg-indigo-600/20 border-indigo-500 text-white'
-                                                                    : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:border-slate-700'
+                                                                ? 'bg-indigo-600/20 border-indigo-500 text-white'
+                                                                : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:border-slate-700'
                                                                 }`}
                                                         >
                                                             <span className="font-bold">{t.name}</span>

@@ -1,17 +1,10 @@
-import { useState, useEffect, useRef, type FormEvent, type SyntheticEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import {
     Users,
-    Play,
     ChevronRight,
-    Coins,
-    Trophy,
     Check,
     AlertCircle,
-    RefreshCw,
     Award,
-    ArrowRight,
-    ShieldAlert,
-    Settings,
     Home,
     Clock,
     Wrench,

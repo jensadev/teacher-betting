@@ -379,6 +379,22 @@ export default function App() {
         };
     }, [supabase, lobbyId, role, playerId]);
 
+    const skipToEnd = () => {
+        if (!session || !channelRef.current) return;
+
+        // A rigid confirmation box fits the theme perfectly
+        if (!window.confirm("Varning: Är du säker på att du vill avbryta pågående utmaningar och hoppa direkt till slutresultatet?")) return;
+
+        const updatedSession: SessionData = {
+            ...session,
+            currentSlideIndex: CHALLENGES.length + 1, // Pushing it past the array length triggers the end screen
+            state: 'ended',
+            lastWinner: null
+        };
+        setSession(updatedSession);
+        channelRef.current.send({ type: 'broadcast', event: 'slide_change', payload: { session: updatedSession } });
+    };
+
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const lobbyParam = params.get('lobby');
@@ -811,6 +827,13 @@ export default function App() {
                                             <div className="bg-[#f8f9fa] border-b border-[#ced4da] px-3 py-2 font-bold text-[#00529b] flex justify-between">
                                                 <span>Delmoment {session.currentSlideIndex} av {CHALLENGES.length}</span>
                                                 <span className="text-gray-500">{CHALLENGES[session.currentSlideIndex - 1].title}</span>
+                                                <button
+                                                    onClick={skipToEnd}
+                                                    className="text-[10px] uppercase bg-white text-[#721c24] border border-[#f5c6cb] px-2 py-0.5 hover:bg-[#f8d7da] transition-colors"
+                                                    title="Hoppa till slutresultat"
+                                                >
+                                                    Avsluta
+                                                </button>
                                             </div>
                                             <div className="p-4 space-y-4">
                                                 <p className="bg-white border border-[#e2e6ea] p-3 text-gray-700 italic">

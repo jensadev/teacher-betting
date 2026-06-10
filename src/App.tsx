@@ -219,6 +219,10 @@ export default function App() {
     const [betAmount, setBetAmount] = useState('');
     const [betSuccessMsg, setBetSuccessMsg] = useState('');
     const [showHelpModal, setShowHelpModal] = useState(false);
+    
+    // Sparar undan rättningsdetaljer för att visa snygga kvitton till eleverna
+    const [roundResultMemo, setRoundResultMemo] = useState<{ teacherName: string; amount: number; outcome: 'win' | 'lose' | 'draw'; payout: number } | null>(null);
+    
     const channelRef = useRef<RealtimeChannelLike | null>(null);
 
     const normalizeTeamName = (name: string) => name.trim().toLowerCase();
@@ -253,6 +257,7 @@ export default function App() {
         };
         localStorage.setItem(TEAM_IDENTITY_STORAGE_KEY, JSON.stringify(identity));
     };
+
     // AUTO-SPARA LÄRARENS SESSION
     useEffect(() => {
         if (role === 'host' && session) {
@@ -389,12 +394,11 @@ export default function App() {
     const skipToEnd = () => {
         if (!session || !channelRef.current) return;
 
-        // A rigid confirmation box fits the theme perfectly
         if (!window.confirm("Varning: Är du säker på att du vill avbryta pågående utmaningar och hoppa direkt till slutresultatet?")) return;
 
         const updatedSession: SessionData = {
             ...session,
-            currentSlideIndex: CHALLENGES.length + 1, // Pushing it past the array length triggers the end screen
+            currentSlideIndex: CHALLENGES.length + 1,
             state: 'ended',
             lastWinner: null
         };
@@ -607,16 +611,71 @@ export default function App() {
         channelRef.current.send({ type: 'broadcast', event: 'round_resolved', payload: { session: updatedSession } });
     };
 
+    const resolveAsDraw = async () => {
+        if (!session || !channelRef.current) return;
+        const currentChallenge = CHALLENGES[session.currentSlideIndex - 1];
+
+        const updatedSession: SessionData = {
+            ...session,
+            state: 'result',
+            winningHistory: [...(session.winningHistory || []), { 
+                challengeId: currentChallenge.id, 
+                winningTeacherId: 'draw', 
+                winningTeacherName: 'Oavgjort (Ingen vinnare)' 
+            }],
+            lastWinner: { id: 'draw', name: 'Oavgjort (Ingen vinnare)', odds: 1 }
+        };
+        setSession(updatedSession);
+        channelRef.current.send({ type: 'broadcast', event: 'round_resolved', payload: { session: updatedSession } });
+    };
+
+    // ELEV: NOLLSTÄLL KVITTO INFÖR NY ROND
+    useEffect(() => {
+        if (role !== 'player' || !session) return;
+        if (session.state === 'betting') {
+            setRoundResultMemo(null);
+        }
+    }, [session?.currentSlideIndex, session?.state, role]);
+
+    // ELEV: LYSSNA PÅ UTFALL & BETALA UT / ÅTERBETALA VIA DRAW
     useEffect(() => {
         if (role !== 'player' || !session || !myTeam || !channelRef.current) return;
+        
         if (session.state === 'result' && session.lastWinner && myTeam.activeBet) {
-            const isWin = myTeam.activeBet.teacherId === session.lastWinner.id;
-            const newBalance = isWin ? myTeam.balance + Math.round(myTeam.activeBet.amount * session.lastWinner.odds) : myTeam.balance;
-
+            const currentChallenge = CHALLENGES[session.currentSlideIndex - 1];
+            const betTeacher = currentChallenge?.teachers.find(t => t.id === myTeam.activeBet?.teacherId);
+            const teacherName = betTeacher ? betTeacher.name : 'Okänd';
+            
+            let outcome: 'win' | 'lose' | 'draw' = 'lose';
+            let payout = 0;
+            let newBalance = myTeam.balance;
+            
+            if (session.lastWinner.id === 'draw') {
+                outcome = 'draw';
+                payout = myTeam.activeBet.amount; // Hela insatsen betalas tillbaka
+                newBalance = myTeam.balance + payout;
+            } else if (myTeam.activeBet.teacherId === session.lastWinner.id) {
+                outcome = 'win';
+                payout = Math.round(myTeam.activeBet.amount * session.lastWinner.odds);
+                newBalance = myTeam.balance + payout;
+            } else {
+                outcome = 'lose';
+                payout = 0;
+            }
+            
+            setRoundResultMemo({ teacherName, amount: myTeam.activeBet.amount, outcome, payout });
+            
             const updatedTeam: Team = { ...myTeam, balance: newBalance, activeBet: null };
             setMyTeam(updatedTeam);
             persistTeamIdentity(updatedTeam, lobbyId);
-            channelRef.current.track({ id: playerId, teamName: updatedTeam.name, balance: updatedTeam.balance, activeBet: null, updatedAt: Date.now() });
+            
+            void channelRef.current.track({ 
+                id: playerId, 
+                teamName: updatedTeam.name, 
+                balance: updatedTeam.balance, 
+                activeBet: null, 
+                updatedAt: Date.now() 
+            });
         }
     }, [session]);
 
@@ -643,7 +702,6 @@ export default function App() {
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(joinUrl)}`;
     const CURRENCY = "elebux";
 
-    // FAKE SIDEBAR DATA FOR AUTHENTICITY
     const sidebarLinks = [
         { icon: Lightbulb, text: "Aktuellt" },
         { icon: Calendar, text: "Schema" },
@@ -912,6 +970,13 @@ export default function App() {
                                                     {CHALLENGES[session.currentSlideIndex - 1].description}
                                                 </p>
 
+                                                {/* Statusindikator vid oavgjort */}
+                                                {session.lastWinner?.id === 'draw' && (
+                                                    <div className="bg-[#fff3cd] border border-[#ffeeba] text-[#856404] px-3 py-2 text-xs font-bold">
+                                                        Beslut: Ronden deklarerad som oavgjord. Samtliga insatser har återförts till elevernas saldon.
+                                                    </div>
+                                                )}
+
                                                 <table className="w-full border-collapse border border-[#ced4da] text-left">
                                                     <thead className="bg-[#e9ecef]">
                                                         <tr>
@@ -939,13 +1004,24 @@ export default function App() {
                                                     </tbody>
                                                 </table>
 
-                                                {session.state === 'result' && (
-                                                    <div className="text-right mt-4">
-                                                        <button onClick={nextSlide} className="bg-[#f8f9fa] border border-[#ced4da] text-gray-800 hover:bg-[#e2e6ea] px-4 py-1.5 font-bold">
-                                                            Nästa &raquo;
-                                                        </button>
+                                                {/* Knapp för oavgjort / Gå vidare */}
+                                                <div className="flex justify-between items-center mt-4 pt-2 border-t border-[#dee2e6]">
+                                                    <div>
+                                                        {session.state === 'betting' && (
+                                                            <button 
+                                                                onClick={resolveAsDraw} 
+                                                                className="bg-[#f8f9fa] border border-[#ced4da] text-[#721c24] hover:bg-[#e2e6ea] px-3 py-1 text-xs font-bold"
+                                                            >
+                                                                DNF (Återbetala alla insatser)
+                                                            </button>
+                                                        )}
                                                     </div>
-                                                )}
+                                                    {session.state === 'result' && (
+                                                        <button onClick={nextSlide} className="bg-[#f8f9fa] border border-[#ced4da] text-gray-800 hover:bg-[#e2e6ea] px-4 py-1.5 font-bold">
+                                                            Nästa delmoment &raquo;
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -1045,57 +1121,71 @@ export default function App() {
                                             <span className="text-gray-500">Rond {session.currentSlideIndex}</span>
                                         </div>
 
-                                        {myTeam.activeBet ? (
+                                        {/* RÄTTNINGSKVITTO */}
+                                        {session.state === 'result' && roundResultMemo ? (
+                                            <div className={`border p-3 rounded-sm space-y-2 ${
+                                                roundResultMemo.outcome === 'win' ? 'border-[#c3e6cb] bg-[#d4edda] text-[#155724]' :
+                                                roundResultMemo.outcome === 'draw' ? 'border-[#ffeeba] bg-[#fff3cd] text-[#856404]' :
+                                                'border-[#f5c6cb] bg-[#f8d7da] text-[#721c24]'
+                                            }`}>
+                                                <div className="font-bold border-b pb-1">
+                                                    {roundResultMemo.outcome === 'win' && 'Beslut: Vinst utbetald'}
+                                                    {roundResultMemo.outcome === 'draw' && 'Beslut: Rond oavgjord'}
+                                                    {roundResultMemo.outcome === 'lose' && 'Beslut: Förlust bokförd'}
+                                                </div>
+                                                <p className="text-xs">
+                                                    Ditt val: <strong>{roundResultMemo.teacherName}</strong> (Insats: {roundResultMemo.amount} {CURRENCY}).
+                                                </p>
+                                                <p className="text-sm font-bold">
+                                                    {roundResultMemo.outcome === 'win' && `+${roundResultMemo.payout} ${CURRENCY} insatt.`}
+                                                    {roundResultMemo.outcome === 'draw' && `Insatsen på {roundResultMemo.payout} ${CURRENCY} har återförts.`}
+                                                    {roundResultMemo.outcome === 'lose' && `Saldot drogs vid inlämning.`}
+                                                </p>
+                                            </div>
+                                        ) : myTeam.activeBet ? (
+                                            /* VÄNTAR PÅ SVAR */
                                             <div className="border border-[#c3e6cb] bg-[#d4edda] p-3 text-[#155724] space-y-2 rounded-sm">
                                                 <div className="font-bold border-b border-[#c3e6cb] pb-1">Kvitto: Insats mottagen</div>
                                                 <p className="text-sm">Du har lagt <strong>{myTeam.activeBet.amount} {CURRENCY}</strong> på <strong>{CHALLENGES[session.currentSlideIndex - 1].teachers.find(t => t.id === myTeam.activeBet?.teacherId)?.name}</strong>.</p>
                                                 {session.state === 'betting' && (
                                                     <button onClick={cancelBet} className="text-[#856404] underline text-xs">Ångra insats</button>
                                                 )}
-
-                                                {session.state === 'result' && (
-                                                    <div className="mt-3 p-2 border border-[#856404] bg-[#fff3cd] text-[#856404] text-center font-bold">
-                                                        {session.lastWinner?.id === myTeam.activeBet.teacherId
-                                                            ? `Rätt! Vinst: ${Math.round(myTeam.activeBet.amount * session.lastWinner.odds)} ${CURRENCY}`
-                                                            : 'Felaktigt. Insats förlorad.'}
-                                                    </div>
-                                                )}
                                             </div>
-                                        ) : (
-                                            session.state === 'betting' ? (
-                                                <form onSubmit={placeBet} className="border border-[#ced4da] bg-white">
-                                                    <div className="bg-[#f8f9fa] border-b border-[#ced4da] px-3 py-2 font-bold">Inlämning av insats</div>
-                                                    <div className="p-3 space-y-4">
-                                                        <div>
-                                                            <label className="block font-bold mb-1">Markera kandidat:</label>
-                                                            <select
-                                                                value={selectedTeacherId}
-                                                                onChange={(e) => setSelectedTeacherId(e.target.value)}
-                                                                className="w-full border border-[#ced4da] px-2 py-1 bg-white outline-none"
-                                                            >
-                                                                <option value="" disabled>-- Välj i listan --</option>
-                                                                {CHALLENGES[session.currentSlideIndex - 1].teachers.map(t => (
-                                                                    <option key={t.id} value={t.id}>{t.name} (Odds: {t.odds})</option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label className="block font-bold mb-1">Belopp:</label>
-                                                            <div className="flex gap-2">
-                                                                <input type="number" min="1" max={myTeam.balance} value={betAmount} onChange={(e) => setBetAmount(e.target.value)} className="flex-1 border border-[#ced4da] px-2 py-1 outline-none" placeholder="0" />
-                                                                <button type="button" onClick={() => setBetAmount(myTeam.balance.toString())} className="bg-[#e9ecef] border border-[#ced4da] text-xs px-2 hover:bg-[#dee2e6]">Max</button>
-                                                            </div>
-                                                        </div>
-                                                        <button type="submit" disabled={!selectedTeacherId || !betAmount} className="bg-[#00529b] text-white w-full py-1.5 font-bold disabled:opacity-50">
-                                                            Skicka in
-                                                        </button>
+                                        ) : session.state === 'betting' ? (
+                                            /* AVGE INSATS */
+                                            <form onSubmit={placeBet} className="border border-[#ced4da] bg-white">
+                                                <div className="bg-[#f8f9fa] border-b border-[#ced4da] px-3 py-2 font-bold">Inlämning av insats</div>
+                                                <div className="p-3 space-y-4">
+                                                    <div>
+                                                        <label className="block font-bold mb-1">Markera kandidat:</label>
+                                                        <select
+                                                            value={selectedTeacherId}
+                                                            onChange={(e) => setSelectedTeacherId(e.target.value)}
+                                                            className="w-full border border-[#ced4da] px-2 py-1 bg-white outline-none"
+                                                        >
+                                                            <option value="" disabled>-- Välj i listan --</option>
+                                                            {CHALLENGES[session.currentSlideIndex - 1].teachers.map(t => (
+                                                                <option key={t.id} value={t.id}>{t.name} (Odds: {t.odds})</option>
+                                                            ))}
+                                                        </select>
                                                     </div>
-                                                </form>
-                                            ) : (
-                                                <div className="border border-[#f5c6cb] bg-[#f8d7da] text-[#721c24] p-3 text-center">
-                                                    <strong>Inlämning stängd.</strong> Invänter bedömning från lärare.
+                                                    <div>
+                                                        <label className="block font-bold mb-1">Belopp:</label>
+                                                        <div className="flex gap-2">
+                                                            <input type="number" min="1" max={myTeam.balance} value={betAmount} onChange={(e) => setBetAmount(e.target.value)} className="flex-1 border border-[#ced4da] px-2 py-1 outline-none" placeholder="0" />
+                                                            <button type="button" onClick={() => setBetAmount(myTeam.balance.toString())} className="bg-[#e9ecef] border border-[#ced4da] text-xs px-2 hover:bg-[#dee2e6]">Max</button>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit" disabled={!selectedTeacherId || !betAmount} className="bg-[#00529b] text-white w-full py-1.5 font-bold disabled:opacity-50">
+                                                        Skicka in
+                                                    </button>
                                                 </div>
-                                            )
+                                            </form>
+                                        ) : (
+                                            /* STÄNGT UTAN ATT HA BETTAT */
+                                            <div className="border border-[#f5c6cb] bg-[#f8d7da] text-[#721c24] p-3 text-center">
+                                                <strong>Inlämning stängd.</strong> Inga insatser registrerades från ert lag denna rond.
+                                            </div>
                                         )}
                                     </div>
                                 )}
@@ -1117,6 +1207,7 @@ export default function App() {
                     </div>
                 </main>
             </div>
+            
             {/* SYSTEM MODAL */}
             {showHelpModal && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4 animate-fadeIn">

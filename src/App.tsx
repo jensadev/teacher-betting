@@ -218,7 +218,7 @@ export default function App() {
     const [selectedTeacherId, setSelectedTeacherId] = useState('');
     const [betAmount, setBetAmount] = useState('');
     const [betSuccessMsg, setBetSuccessMsg] = useState('');
-
+    const [showHelpModal, setShowHelpModal] = useState(false);
     const channelRef = useRef<RealtimeChannelLike | null>(null);
 
     const normalizeTeamName = (name: string) => name.trim().toLowerCase();
@@ -732,7 +732,11 @@ export default function App() {
                 <main className="flex-1 p-4 bg-white m-2 md:m-4 border border-[#dee2e6] shadow-sm rounded-sm overflow-y-auto relative">
 
                     {/* Floating Help Button */}
-                    <div className="absolute bottom-4 right-4 text-[#00529b] cursor-pointer">
+                    <div
+                        onClick={() => setShowHelpModal(true)}
+                        className="absolute bottom-4 right-4 text-[#00529b] cursor-pointer hover:opacity-80 transition-opacity"
+                        title="Systeminformation"
+                    >
                         <HelpCircle size={36} fill="#e6f0f9" />
                     </div>
 
@@ -1113,6 +1117,51 @@ export default function App() {
                     </div>
                 </main>
             </div>
+            {/* SCHOOLSOFT SYSTEM MODAL */}
+            {showHelpModal && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4 animate-fadeIn">
+                    <div className="bg-white border-2 border-[#00529b] rounded-sm w-full max-w-sm shadow-lg text-[13px]">
+                        {/* Blå header-rad */}
+                        <div className="bg-[#00529b] text-white px-3 py-1.5 font-bold flex justify-between items-center">
+                            <span>Systeminformation</span>
+                            <button
+                                onClick={() => setShowHelpModal(false)}
+                                className="text-white hover:text-gray-200 font-bold border-none bg-transparent cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Innehåll */}
+                        <div className="p-4 space-y-3">
+                            <p className="text-gray-800">
+                                Detta är ett hobbyprojekt skapat för skoj skull av <strong>Jens Andreasson</strong>.
+                            </p>
+                            <p className="text-gray-500 text-[11px] italic">
+                                All eventuell likhet med existerande pedagogiska plattformar är helt avsiktlig.
+                            </p>
+
+                            {/* Bottenrad med stängknapp och länk */}
+                            <div className="pt-3 border-t border-[#dee2e6] flex justify-between items-center">
+                                <a
+                                    href="https://github.com/jensadev/teacher-betting" // Byt ut till din faktiska repo-länk när du vill!
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[#00529b] underline font-bold flex items-center gap-1 hover:text-[#004080]"
+                                >
+                                    GitHub Repository &raquo;
+                                </a>
+                                <button
+                                    onClick={() => setShowHelpModal(false)}
+                                    className="bg-[#f8f9fa] border border-[#ced4da] px-3 py-1 hover:bg-[#e2e6ea] font-bold text-xs rounded-sm shadow-sm"
+                                >
+                                    Stäng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

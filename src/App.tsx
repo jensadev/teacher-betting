@@ -112,7 +112,7 @@ const CHALLENGES: Challenge[] = [
             { id: "t1", name: "Per (Matte)", odds: 2.6 },
             { id: "t2", name: "Fredrik (Religion)", odds: 6.5 },
             { id: "t3", name: "Henrik (Goblin)", odds: 4.33 },
-            { id: "t4", name: "Sara (DNF)", odds: 4.33 }
+            { id: "t4", name: "Sara (Körledare)", odds: 4.33 }
         ]
     },
     {
@@ -120,7 +120,7 @@ const CHALLENGES: Challenge[] = [
         title: "Kortslutningen",
         description: "De stackars lärarna som valts för detta ska recitera så många ord som möjligt på en viss bokstav under 30 sekunder.",
         teachers: [
-            { id: "t1", name: "Sara (Rektor)", odds: 3.0 },
+            { id: "t1", name: "Sara (Körledare)", odds: 3.0 },
             { id: "t2", name: "Robert (Matte)", odds: 3.75 },
             { id: "t3", name: "Eszter (Litteratur)", odds: 3 },
             { id: "t4", name: "Jimmy (Psykologi)", odds: 15 }
@@ -143,7 +143,7 @@ const CHALLENGES: Challenge[] = [
         description: "Några oändligt olyckliga lärare ska nu memorera flest decimaler av Pi på 30 sekunder.",
         teachers: [
             { id: "t1", name: "Norman (Kemi)", odds: 3.25 },
-            { id: "t2", name: "Jens (Programmering)", odds: 4.33 },
+            { id: "t2", name: "Jens (Trollkarl)", odds: 4.33 },
             { id: "t3", name: "Rafael (Matematik)", odds: 3.25 },
             { id: "t4", name: "Henrik (Goblin)", odds: 6.5 }
         ]
@@ -176,7 +176,7 @@ const CHALLENGES: Challenge[] = [
         description: "De olyckligt utvalda ska stava engelska ord.",
         teachers: [
             { id: "t1", name: "Daniel (Engelska)", odds: 3 },
-            { id: "t2", name: "Sara (DNF)", odds: 3 },
+            { id: "t2", name: "Sara (Körledare)", odds: 3 },
             { id: "t3", name: "Jimmy (Psykologi)", odds: 15 },
             { id: "t4", name: "Robert (Matte)", odds: 3.75 }
         ]
@@ -189,7 +189,7 @@ const CHALLENGES: Challenge[] = [
             { id: "t1", name: "Per (Matte)", odds: 4 },
             { id: "t2", name: "Eszter (Litteratur)", odds: 12 },
             { id: "t3", name: "Norman (Kemi)", odds: 2.4 },
-            { id: "t4", name: "Jens (Programmering)", odds: 4 }
+            { id: "t4", name: "Jens (Trollkarl)", odds: 4 }
         ]
     },
 ];

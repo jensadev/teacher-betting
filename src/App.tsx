@@ -802,18 +802,53 @@ export default function App() {
 
                                 {/* LOBBY */}
                                 {session.currentSlideIndex === 0 && (
-                                    <div className="border border-[#ced4da] rounded-sm flex flex-col md:flex-row">
-                                        <div className="flex-1 p-6 space-y-4 border-b md:border-b-0 md:border-r border-[#ced4da]">
-                                            <h2 className="text-[#00529b] text-xl font-bold">Väntar på deltagare...</h2>
-                                            <p>Lag ansluter med koden <strong>{lobbyId}</strong> eller genom att skanna QR-koden.</p>
-                                            <p className="text-gray-500 italic">Varje lag tilldelas 100 {CURRENCY} vid start.</p>
-                                            <button onClick={nextSlide} className="bg-[#00529b] text-white border border-[#004080] px-4 py-2 font-bold mt-4">
-                                                Påbörja utmaning &raquo;
-                                            </button>
+                                    <div className="space-y-4">
+                                        {/* Övre del: Information och QR */}
+                                        <div className="border border-[#ced4da] rounded-sm flex flex-col md:flex-row">
+                                            <div className="flex-1 p-6 space-y-4 border-b md:border-b-0 md:border-r border-[#ced4da]">
+                                                <h2 className="text-[#00529b] text-xl font-bold">Väntar på deltagare...</h2>
+                                                <p>Lag ansluter med koden <strong>{lobbyId}</strong> eller genom att skanna QR-koden.</p>
+                                                <p className="text-gray-500 italic">Varje lag tilldelas 100 {CURRENCY} vid start.</p>
+                                                <button
+                                                    onClick={nextSlide}
+                                                    disabled={teams.length === 0}
+                                                    className="bg-[#00529b] text-white border border-[#004080] px-4 py-2 font-bold mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    Påbörja utmaning &raquo;
+                                                </button>
+                                            </div>
+                                            <div className="p-6 bg-[#f8f9fa] flex flex-col items-center justify-center min-w-[250px]">
+                                                <img src={qrCodeUrl} alt="QR" className="w-40 h-40 border border-gray-300 p-1 bg-white" />
+                                                <span className="text-[10px] text-gray-500 mt-2 text-center break-all">{joinUrl}</span>
+                                            </div>
                                         </div>
-                                        <div className="p-6 bg-[#f8f9fa] flex flex-col items-center justify-center min-w-[250px]">
-                                            <img src={qrCodeUrl} alt="QR" className="w-40 h-40 border border-gray-300 p-1 bg-white" />
-                                            <span className="text-[10px] text-gray-500 mt-2 text-center break-all">{joinUrl}</span>
+
+                                        {/* Undre del: Anslutna lag */}
+                                        <div className="border border-[#ced4da] bg-white">
+                                            <div className="bg-[#e9ecef] border-b border-[#ced4da] px-3 py-2 font-bold text-gray-700 flex justify-between">
+                                                <span>Anslutna lag ({teams.length})</span>
+                                                <Users size={16} className="text-gray-500" />
+                                            </div>
+                                            <div className="p-0 max-h-[300px] overflow-y-auto">
+                                                {teams.length > 0 ? (
+                                                    <table className="w-full text-left border-collapse">
+                                                        <tbody>
+                                                            {teams.map((t, index) => (
+                                                                <tr key={t.id} className={index % 2 === 0 ? 'bg-white' : 'bg-[#f8f9fa]'}>
+                                                                    <td className="border-b border-[#f1f3f5] px-3 py-2 text-gray-800 flex items-center gap-2">
+                                                                        <Check size={14} className="text-[#28a745]" />
+                                                                        {t.name}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                ) : (
+                                                    <div className="p-4 text-center text-gray-500 italic text-xs">
+                                                        Inga lag har anslutit ännu.
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}

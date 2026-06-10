@@ -16,7 +16,8 @@ import {
     Calendar,
     BookOpen,
     GraduationCap,
-    Folder
+    Folder,
+    RefreshCw
 } from 'lucide-react';
 import logo from './assets/logoFile.png';
 
@@ -252,6 +253,12 @@ export default function App() {
         };
         localStorage.setItem(TEAM_IDENTITY_STORAGE_KEY, JSON.stringify(identity));
     };
+    // AUTO-SPARA LÄRARENS SESSION
+    useEffect(() => {
+        if (role === 'host' && session) {
+            localStorage.setItem('betit_host_session', JSON.stringify(session));
+        }
+    }, [session, role]);
 
     useEffect(() => {
         if (window.supabase) {
@@ -451,6 +458,27 @@ export default function App() {
         setSession(newSession);
         setTeams([]);
         setErrorMessage('');
+    };
+
+    const resumeLobby = () => {
+        if (!supabase) {
+            setErrorMessage("Kopplingen till Supabase är inte aktiv.");
+            return;
+        }
+        try {
+            const stored = localStorage.getItem('betit_host_session');
+            if (!stored) {
+                setErrorMessage("Hittade ingen sparad session att återuppta.");
+                return;
+            }
+            const parsedSession = JSON.parse(stored) as SessionData;
+            setLobbyId(parsedSession.id);
+            setSession(parsedSession);
+            setRole('host');
+            setErrorMessage('');
+        } catch (err) {
+            setErrorMessage("Kunde inte läsa in den sparade sessionen. Datan kan vara korrupt.");
+        }
     };
 
     const joinLobby = (e: FormEvent<HTMLFormElement>) => {
@@ -760,6 +788,11 @@ export default function App() {
                                         <button onClick={createLobby} className="bg-[#f8f9fa] border border-[#ced4da] text-gray-800 hover:bg-[#e2e6ea] px-4 py-2 font-bold shadow-sm w-full md:w-auto">
                                             Starta applikation
                                         </button>
+                                        {localStorage.getItem('betit_host_session') && (
+                                            <button onClick={resumeLobby} className="bg-[#fff3cd] border border-[#ffeeba] text-[#856404] hover:bg-[#ffe8a1] px-4 py-2 font-bold shadow-sm w-full md:w-auto flex items-center justify-center gap-2">
+                                                <RefreshCw size={16} /> Återuppta tidigare
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 

@@ -1117,7 +1117,7 @@ export default function App() {
                     </div>
                 </main>
             </div>
-            {/* SCHOOLSOFT SYSTEM MODAL */}
+            {/* SYSTEM MODAL */}
             {showHelpModal && (
                 <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4 animate-fadeIn">
                     <div className="bg-white border-2 border-[#00529b] rounded-sm w-full max-w-sm shadow-lg text-[13px]">
@@ -1135,7 +1135,7 @@ export default function App() {
                         {/* Innehåll */}
                         <div className="p-4 space-y-3">
                             <p className="text-gray-800">
-                                Detta är ett hobbyprojekt skapat för skoj skull av <strong>Jens Andreasson</strong>.
+                                Detta är ett hobbyprojekt skapat för student-skojs av <strong>Jens Andreasson</strong>.
                             </p>
                             <p className="text-gray-500 text-[11px] italic">
                                 All eventuell likhet med existerande pedagogiska plattformar är helt avsiktlig.
@@ -1144,7 +1144,7 @@ export default function App() {
                             {/* Bottenrad med stängknapp och länk */}
                             <div className="pt-3 border-t border-[#dee2e6] flex justify-between items-center">
                                 <a
-                                    href="https://github.com/jensadev/teacher-betting" // Byt ut till din faktiska repo-länk när du vill!
+                                    href="https://github.com/jensadev/teacher-betting"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-[#00529b] underline font-bold flex items-center gap-1 hover:text-[#004080]"
